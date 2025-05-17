@@ -20,7 +20,10 @@ int* insert(int arr[], int& n, const int value, int index);
 int* pop_back(int arr[], int& n);
 
 int** push_row_back(int** arr, int& rows, const int cols);
+int** pop_row_back(int** arr, int& rows, const int cols);
 
+void push_col_back(int** arr, const int rows, int& cols);
+void pop_col_back(int** arr, const int rows, int& cols);
 
 //#define DYNAMIC_MEMORY_1
 #define DYNAMIC_MEMORY_2
@@ -99,16 +102,31 @@ void main()
 	{
 		arr[i] = new int[cols];
 	}
+	cout << "Память выделена. Для добавления столбца ";
+	system("PAUSE");
 
-	FillRand(arr, rows, cols);
-	Print(arr, rows, cols);
+	push_col_back(arr, rows, cols);
+	cout << "Столбец добавлен\n";
 
-	//int   - 'int';
-	//int*  - Указатель на 'int';
-	//int** - Указатель на указатель на 'int';
 
-	arr = push_row_back(arr, rows, cols);
-	Print(arr, rows, cols);
+	//FillRand(arr, rows, cols);
+	//Print(arr, rows, cols);
+
+	////int   - 'int';
+	////int*  - Указатель на 'int';
+	////int** - Указатель на указатель на 'int';
+
+	//arr = push_row_back(arr, rows, cols);
+	//Print(arr, rows, cols);
+
+	//push_col_back(arr, rows, cols);
+	//Print(arr, rows, cols);
+
+	//arr = pop_row_back(arr, rows, cols);
+	//Print(arr, rows, cols);
+
+	//pop_col_back(arr, rows, cols);
+	//Print(arr, rows, cols);
 
 	//1) Сначала удаляем строки:
 	for (int i = 0; i < rows; i++)
@@ -246,4 +264,43 @@ int** push_row_back(int** arr, int& rows, const int cols)
 
 	//6) Возвращаем новый массив на место вывоза:
 	return buffer;
+}
+int** pop_row_back(int** arr, int& rows, const int cols)
+{
+	int** buffer = new int* [--rows];
+	for (int i = 0; i < rows; i++)
+	{
+		buffer[i] = arr[i];
+	}
+	delete[] arr[rows];
+	delete[] arr;
+	return buffer;
+}
+void push_col_back(int** arr, const int rows, int& cols)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		int* buffer = new int[cols + 1] {};
+		for (int j = 0; j < cols; j++)
+		{
+			buffer[j] = arr[i][j];
+		}
+		delete[] arr[i];
+		arr[i] = buffer;
+	}
+	cols++;
+}
+void pop_col_back(int** arr, const int rows, int& cols)
+{
+	cols--;
+	for (int i = 0; i < rows; i++)
+	{
+		int* buf = new int[cols];
+		for (int j = 0; j < cols; j++)
+		{
+			buf[j] = arr[i][j];
+		}
+		delete[] arr[i];
+		arr[i] = buf;
+	}
 }

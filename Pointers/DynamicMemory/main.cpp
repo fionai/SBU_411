@@ -7,10 +7,16 @@ using std::endl;
 #define tab "\t"
 #define delimiter "\n---------------------------------------\n"
 
-void FillRand(int arr[], const int n);
+template <typename T> T** Allocate(const int rows, const int cols);
+template <typename T> void Clear(T**& arr, const int rows);
+
+void FillRand(int arr[], const int n, int minRand = 0, int maxRand = 100);
 void FillRand(double arr[], const int n);
+void FillRand(char arr[], const int n, int minRand = 0, int maxRand = 256);
+
 void FillRand(int** arr, const int rows, const int cols);
-void FillRand(double** arr, const int rows, const int cols);
+void FillRand(double** arr, const int rows, const int cols); 
+void FillRand(char** arr, const int rows, const int cols);
 
 template <typename T> void Print(T arr[], const int n);
 template <typename T> void Print(T** arr, const int rows, const int cols);
@@ -100,16 +106,12 @@ void main()
 	cout << "Введите количество строк: "; cin >> rows;
 	cout << "Введите количество элементов строки: "; cin >> cols;
 
-	typedef int DataType; // Существующему типу данных дает второе имя
+	typedef char DataType; // Существующему типу данных дает второе имя
 
 	//1) Создаем массив указателей:
-	DataType** arr = new DataType * [rows];
+	DataType** arr = Allocate<DataType>(rows, cols);
 
-	//2) Выделяем память под строки двумерного динамического массива:
-	for (int i = 0; i < rows; i++)
-	{
-		arr[i] = new DataType[cols];
-	}
+	
 	/*cout << "Память выделена. Для добавления столбца ";
 	system("PAUSE");
 
@@ -125,6 +127,7 @@ void main()
 	////int** - Указатель на указатель на 'int';
 
 	arr = push_row_back(arr, rows, cols);
+
 	Print(arr, rows, cols);
 
 	push_col_back(arr, rows, cols);
@@ -136,24 +139,34 @@ void main()
 	pop_col_back(arr, rows, cols);
 	Print(arr, rows, cols);
 
-	//1) Сначала удаляем строки:
-	for (int i = 0; i < rows; i++)
-	{
-		delete[] arr[i];
-	}
-
-	//2) Удаляем массив указателей:
-	delete[] arr;
+	Clear(arr, rows);
+	cout << arr;
 
 #endif // DYNAMIC_MEMORY_2
 
 }
 
-void FillRand(int arr[], const int n)
+
+template <typename T> T** Allocate(const int rows, const int cols)
+{
+	T** arr = new T*[rows];
+	for (int i = 0; i < rows; i++)
+		arr[i] = new T[cols]{};
+	return arr;
+}
+template <typename T> void Clear(T**& arr, const int rows)
+{
+	for (int i = 0; i < rows; i++)
+		delete[] arr[i];
+	delete[] arr;
+	arr = nullptr;
+}
+
+void FillRand(int arr[], const int n, int minRand, int maxRand)
 {
 	for (int i = 0; i < n; i++)
 	{
-		arr[i] = rand() % 100;
+		arr[i] = rand() % (maxRand - minRand) + minRand;
 		//Index operator, Subscript operator;
 	}
 }void FillRand(double arr[], const int n)
@@ -165,6 +178,15 @@ void FillRand(int arr[], const int n)
 		//Index operator, Subscript operator;
 	}
 }
+void FillRand(char arr[], const int n, int minRand, int maxRand)
+{
+	for (int i = 0; i < n; i++)
+	{
+		arr[i] = rand() % (maxRand - minRand) + minRand;
+		//Index operator, Subscript operator;
+	}
+}
+
 void FillRand(int** arr, const int rows, const int cols)
 {
 	for (int i = 0; i < rows; i++)
@@ -183,6 +205,14 @@ void FillRand(double** arr, const int rows, const int cols)
 		{
 			arr[i][j] = double(rand() % 10000)/100;
 		}
+	}
+}
+void FillRand(char** arr, const int rows, const int cols)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+			arr[i][j] = rand();
 	}
 }
 template <typename T> void Print(T arr[], const int n)
@@ -272,49 +302,19 @@ template <typename T>  T* pop_back(T arr[], int& n)
 
 template <typename T> T** push_row_back(T** arr, int& rows, const int cols)
 {
-	//1) Создаем буферный массив указателей нужного размера:
-	T** buffer = new T*[rows + 1];
-
-	//2) Копируем адреса строк в буферный массив указателей:
-	for (int i = 0; i < rows; i++)
-	{
-		buffer[i] = arr[i];
-	}
-
-	//3) Удаляем исходный массив указателей:
-	delete[] arr;
-
-	//4) Создаем добавляемую строку, и записываем ее адрес в массив указателей:
-	buffer[rows] = new T[cols] {};
-
-	//5) При добавлении в массив строки, количество его строк увеличивается на 1:
-	rows++;
-
-	//6) Возвращаем новый массив на место вывоза:
-	return buffer;
+	return push_back(arr, rows, new T[cols] {});
 }
 template <typename T> T** pop_row_back(T** arr, int& rows, const int cols)
 {
-	T** buffer = new T* [--rows];
-	for (int i = 0; i < rows; i++)
-	{
-		buffer[i] = arr[i];
-	}
-	delete[] arr[rows];
-	delete[] arr;
-	return buffer;
+	delete[] arr[rows-1];
+	return pop_back(arr, rows);
 }
 template <typename T> void push_col_back(T** arr, const int rows, int& cols)
 {
 	for (int i = 0; i < rows; i++)
 	{
-		T* buffer = new T[cols + 1] {};
-		for (int j = 0; j < cols; j++)
-		{
-			buffer[j] = arr[i][j];
-		}
-		delete[] arr[i];
-		arr[i] = buffer;
+		arr[i] = push_back(arr[i], cols, T()); //T() - значение по умолчанию для шаблонного типа
+		cols--;
 	}
 	cols++;
 }
